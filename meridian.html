@@ -1,0 +1,299 @@
+
+import { useState, useEffect, useRef } from "react";
+import {
+  Menu, X, ChevronRight, ChevronLeft, CheckCircle, AlertTriangle, Calendar, Mail,
+  Facebook, Instagram, MessageCircle, Printer, Activity, ShieldCheck,
+  ArrowRight, FileText, Stethoscope, Microscope, Droplet, Beaker, Heart,
+  Image as ImageIcon, Lock, FileCheck, Search, User, Share2
+} from "lucide-react";
+
+const LAB_NAME = "Meridian Health Labs";
+const TAGLINE = "Accurate results you can trust.";
+const EMAIL = "info@meridianhealthlabs.com";
+const SITE_URL = "https://www.meridianhealthlabs.com";
+
+const ACCENTS = [
+  { grad: "from-blue-500 to-blue-600", text: "text-blue-600" },
+  { grad: "from-teal-500 to-teal-600", text: "text-teal-600" },
+  { grad: "from-violet-500 to-violet-600", text: "text-violet-600" },
+  { grad: "from-amber-500 to-amber-600", text: "text-amber-600" },
+  { grad: "from-rose-500 to-rose-600", text: "text-rose-600" },
+  { grad: "from-emerald-500 to-emerald-600", text: "text-emerald-600" },
+];
+
+const SERVICES = [
+  { slug: "cbc", icon: Droplet, name: "Complete Blood Count", desc: "A full panel covering red cells, white cells, and platelets.", cbc: true,
+    longDesc: "A Complete Blood Count is one of the most frequently ordered blood tests. It measures red blood cells, white blood cells, and platelets, giving your doctor a broad overview of your general health, immune function, and blood-related conditions.",
+    bullets: ["Red & white blood cell counts", "Hemoglobin and hematocrit", "Platelet count", "Five-part WBC differential"],
+    prepTips: ["No fasting required for most CBC tests", "Stay hydrated before your appointment", "Wear a short-sleeved or loose-sleeved top"],
+    metaDesc: "Learn what a Complete Blood Count (CBC) measures and how to prepare for the test at Meridian Health Labs." },
+  { slug: "blood-sugar", icon: Activity, name: "Blood Sugar Test", desc: "Fasting and random glucose screening.",
+    longDesc: "Blood sugar testing measures the amount of glucose in your blood, helping screen for and monitor conditions related to blood sugar regulation. Both fasting and random testing options are available depending on what your doctor has recommended.",
+    bullets: ["Fasting glucose option", "Random glucose option", "Quick sample collection", "Results typically same-day"],
+    prepTips: ["Fasting tests usually require 8–12 hours without food", "Water is normally fine during the fasting window", "Take regular medications unless told otherwise"],
+    metaDesc: "Fasting and random blood sugar testing at Meridian Health Labs — find out what to expect and how to prepare." },
+  { slug: "lipid-profile", icon: Heart, name: "Lipid Profile", desc: "Cholesterol and triglyceride levels for heart health.",
+    longDesc: "A lipid profile measures cholesterol and triglyceride levels in your blood, important markers your doctor uses to assess cardiovascular health and overall heart disease risk over time.",
+    bullets: ["Total cholesterol", "HDL and LDL cholesterol", "Triglycerides", "Cardiovascular risk markers"],
+    prepTips: ["Most lipid panels require 9–12 hours of fasting", "Avoid alcohol the evening before your test", "Continue regular medications unless advised otherwise"],
+    metaDesc: "Check your cholesterol and triglyceride levels with a lipid profile test at Meridian Health Labs." },
+  { slug: "liver-function", icon: FileText, name: "Liver Function Test", desc: "Enzymes and proteins that reflect liver health.",
+    longDesc: "A liver function test panel checks a group of enzymes and proteins in your blood that reflect how well your liver is working, often used to investigate symptoms or monitor ongoing liver health.",
+    bullets: ["Liver enzymes (ALT, AST)", "Bilirubin levels", "Total protein and albumin", "Comprehensive liver health snapshot"],
+    prepTips: ["Some liver panels require fasting — check with your doctor", "Avoid alcohol for 24 hours before testing", "Mention any medications or supplements you're taking"],
+    metaDesc: "Liver function testing at Meridian Health Labs checks key enzymes and proteins that reflect liver health." },
+  { slug: "kidney-function", icon: Beaker, name: "Kidney Function Test", desc: "Key markers like creatinine and urea.",
+    longDesc: "Kidney function testing measures markers like creatinine and urea, which help assess how effectively your kidneys are filtering waste from your bloodstream.",
+    bullets: ["Creatinine levels", "Blood urea nitrogen (BUN)", "Estimated filtration markers", "Useful for routine health screening"],
+    prepTips: ["Fasting is usually not required, but confirm with your doctor", "Stay normally hydrated before your visit", "Avoid intense exercise right before testing"],
+    metaDesc: "Kidney function testing at Meridian Health Labs measures key markers of kidney health like creatinine and BUN." },
+  { slug: "thyroid-profile", icon: Stethoscope, name: "Thyroid Profile", desc: "TSH, T3 and T4 levels for thyroid function.",
+    longDesc: "A thyroid profile measures hormones like TSH, T3, and T4 that regulate your metabolism, helping your doctor evaluate thyroid gland function and screen for common thyroid-related conditions.",
+    bullets: ["TSH (Thyroid Stimulating Hormone)", "T3 and T4 hormone levels", "Useful for energy & metabolism concerns", "Simple blood draw, no special prep"],
+    prepTips: ["Most thyroid panels don't require fasting", "Take thyroid medication as instructed by your doctor before testing", "Morning testing is often preferred, since some hormones vary by time of day"],
+    metaDesc: "Thyroid profile testing (TSH, T3, T4) at Meridian Health Labs helps evaluate thyroid gland function." },
+];
+
+const STEPS = [
+  { icon: Calendar, title: "Book Appointment", desc: "Schedule your visit online or by phone in minutes." },
+  { icon: Droplet, title: "Sample Collection", desc: "Visit our lab or request home collection." },
+  { icon: Microscope, title: "Lab Processing", desc: "Your sample is analyzed by trained technicians." },
+  { icon: FileText, title: "View Report Online", desc: "Get notified and view or download your results." },
+];
+
+const STATS = [
+  { label: "Years Active", value: 12, suffix: "+" },
+  { label: "Tests Completed", value: 250000, suffix: "+" },
+  { label: "Happy Patients", value: 50000, suffix: "+" },
+  { label: "Certified Staff", value: 30, suffix: "+" },
+];
+
+const BASIC_PARAMS = [
+  { id: "wbc", label: "WBC (White Blood Cells)", unit: "×10⁹/L", range: [4.5, 11.0], note: "Part of your immune system, helping fight infection and inflammation." },
+  { id: "rbc", label: "RBC (Red Blood Cells)", unit: "million/µL", rangeBySex: { M: [4.7, 6.1], F: [4.2, 5.4] }, note: "Carry oxygen from your lungs to the rest of your body." },
+  { id: "hb", label: "Hemoglobin (Hb)", unit: "g/dL", rangeBySex: { M: [13.5, 17.5], F: [12.0, 15.5] }, note: "The oxygen-carrying protein inside red blood cells." },
+  { id: "hct", label: "Hematocrit (HCT)", unit: "%", rangeBySex: { M: [38.8, 50], F: [34.9, 44.5] }, note: "The percentage of your blood volume made up of red blood cells." },
+  { id: "mcv", label: "MCV", unit: "fL", range: [80, 100], note: "Reflects the average size of a single red blood cell." },
+  { id: "mch", label: "MCH", unit: "pg", range: [27, 33], note: "Reflects the average amount of hemoglobin inside each red blood cell." },
+  { id: "mchc", label: "MCHC", unit: "g/dL", range: [32, 36], note: "Reflects how concentrated hemoglobin is within your red blood cells." },
+  { id: "rdw", label: "RDW", unit: "%", range: [11.5, 14.5], note: "Reflects how much variation there is in the size of your red blood cells." },
+  { id: "plt", label: "Platelet Count", unit: "/µL", range: [150000, 450000], note: "Small cell fragments that help your blood clot." },
+];
+
+const DIFF_PARAMS = [
+  { id: "neut", label: "Neutrophils", unit: "%", range: [40, 60], note: "Usually the first white blood cell to respond to infection." },
+  { id: "lymph", label: "Lymphocytes", unit: "%", range: [20, 40], note: "Central to your immune system's response to viruses." },
+  { id: "mono", label: "Monocytes", unit: "%", range: [2, 8], note: "Help clean up damaged tissue and fight longer-term infections." },
+  { id: "eos", label: "Eosinophils", unit: "%", range: [1, 4], note: "Often involved in allergic reactions and fighting parasites." },
+  { id: "baso", label: "Basophils", unit: "%", range: [0.5, 1], note: "The least common white blood cell, involved in inflammatory responses." },
+];
+
+const FAQS = [
+  { q: "What is a CBC test?", a: "A Complete Blood Count (CBC) is one of the most common blood tests, giving a broad snapshot of your overall health by measuring red blood cells, white blood cells, and platelets from a single small sample." },
+  { q: "How do I read my CBC report?", a: "Each value on your report sits next to a reference range — the typical range seen in healthy people. Our CBC Report Tool compares your numbers to these ranges automatically and explains what each parameter measures in plain language." },
+  { q: "What is a normal hemoglobin level?", a: "Reference ranges differ slightly by sex: typically around 13.5–17.5 g/dL for men and 12.0–15.5 g/dL for women. Ranges can vary a little between laboratories, so always check the range printed on your specific report." },
+  { q: "Why are platelet counts important?", a: "Platelets are small cell fragments that help your blood clot and stop bleeding. A typical range is roughly 150,000–450,000 per microliter; counts outside this range are worth discussing with your doctor." },
+  { q: "When should I consult a doctor about my results?", a: "If any value falls outside the typical range, or you're experiencing symptoms like unusual fatigue, bruising, or fever, share your report with a qualified doctor. This tool is for general understanding only and is not a substitute for professional medical advice." },
+];
+
+const BLOG_CATS = ["Blood Health", "Test Guides", "Nutrition"];
+
+/*
+ * HOW TO ADD A NEW BLOG POST:
+ * Copy one object below and update:
+ *  id        – a unique number
+ *  cat       – one of BLOG_CATS
+ *  title     – post title
+ *  dateISO   – "YYYY-MM-DD" (used for sorting "most recent")
+ *  date      – display string, e.g. "Jun 2, 2026"
+ *  author    – usually "Lab Content Team"
+ *  reviewer  – your real medical reviewer, e.g. "Dr. Jane Smith, MBBS"
+ *  excerpt   – one-sentence summary used on cards
+ *  image     – { filename, alt, width, height } — add a real `src` once you
+ *               have a licensed WebP photo, and it will render automatically
+ *  content   – paragraphs separated by a blank line
+ * All post content must be written from scratch — do not copy or closely
+ * paraphrase any external article.
+ */
+const BLOG_POSTS = [
+  {
+    id: 1, cat: "Blood Health", title: "Understanding Your CBC: A Beginner's Guide",
+    dateISO: "2026-05-28", date: "May 28, 2026",
+    author: "Lab Content Team", reviewer: "Dr. [Name], [Qualification]",
+    excerpt: "A simple breakdown of what a CBC test measures and how to read your results.",
+    image: { filename: "cbc-blood-test-overview.webp", alt: "Lab technician preparing blood sample tubes for a Complete Blood Count test", width: 800, height: 500 },
+    content: `A Complete Blood Count, or CBC, is one of the simplest and most common blood tests there is. A small sample of your blood is enough to give doctors a broad snapshot of your overall health.
+
+The test breaks your blood down into three main categories: red blood cells, which carry oxygen around your body; white blood cells, which are part of your immune system; and platelets, which help your blood clot.
+
+Each value on your report sits next to a reference range — the typical range seen in healthy people. A result outside that range doesn't automatically mean something is wrong; ranges can vary slightly by lab, age, and other factors.
+
+That's why a CBC is best read together with your symptoms and history, with help from a qualified doctor, rather than on its own.`
+  },
+  {
+    id: 2, cat: "Blood Health", title: "What Causes Low Hemoglobin?",
+    dateISO: "2026-05-12", date: "May 12, 2026",
+    author: "Lab Content Team", reviewer: "Dr. [Name], [Qualification]",
+    excerpt: "Understanding the general factors that can contribute to lower hemoglobin levels.",
+    image: { filename: "low-hemoglobin-blood-sample.webp", alt: "Close-up of a blood sample tube used to test hemoglobin levels", width: 800, height: 500 },
+    content: `Hemoglobin is the protein inside red blood cells responsible for carrying oxygen from your lungs to the rest of your body. When levels drop below the typical range, it's often described as low hemoglobin.
+
+There are many possible general contributors, including not getting enough iron or certain vitamins from your diet, losing blood over time, or having a chronic condition that affects how your body makes red blood cells.
+
+Symptoms can include feeling unusually tired, looking pale, or getting short of breath more easily — though many people with mildly low levels notice nothing at all.
+
+Because the underlying cause varies so widely from person to person, low hemoglobin on a report is a starting point for a conversation with your doctor, not a diagnosis on its own.`
+  },
+  {
+    id: 3, cat: "Test Guides", title: "How to Prepare for a Fasting Blood Test",
+    dateISO: "2026-04-30", date: "Apr 30, 2026",
+    author: "Lab Content Team", reviewer: "Dr. [Name], [Qualification]",
+    excerpt: "Simple tips to help you get ready for a fasting blood draw.",
+    image: { filename: "fasting-blood-test-preparation.webp", alt: "Patient preparing for a fasting blood test at a diagnostic lab", width: 800, height: 500 },
+    content: `Some blood tests work best when you've fasted beforehand. Here's what that usually involves.
+
+Most fasting tests ask for around 8 to 12 hours without food, though plain water is normally fine — and often encouraged, since it makes your veins easier to find.
+
+Unless your doctor tells you otherwise, it's generally fine to keep taking your regular medications. Try to avoid intense exercise and excess caffeine the morning of your test, as both can temporarily affect certain results.
+
+Wearing a short-sleeved or loose-sleeved top makes sample collection quicker and more comfortable. If you're ever unsure whether your test requires fasting, just check with our team when you book.`
+  },
+  {
+    id: 4, cat: "Test Guides", title: "CBC vs. Metabolic Panel: What's the Difference?",
+    dateISO: "2026-04-18", date: "Apr 18, 2026",
+    author: "Lab Content Team", reviewer: "Dr. [Name], [Qualification]",
+    excerpt: "Two common tests, two different jobs — here's how they compare.",
+    image: { filename: "cbc-vs-metabolic-panel-lab.webp", alt: "Laboratory equipment used for blood panel testing", width: 800, height: 500 },
+    content: `Two of the most commonly ordered lab tests are the Complete Blood Count (CBC) and the metabolic panel — and it's easy to mix them up.
+
+A CBC focuses on the cells in your blood: red cells, white cells, and platelets. It's often used as a general health check or to investigate things like fatigue, infection, or unusual bruising.
+
+A metabolic panel, by contrast, measures chemicals dissolved in your blood — things like glucose, electrolytes, and markers of kidney and liver function.
+
+Doctors frequently order both together, since each test reveals a different piece of the puzzle. Neither replaces the other; they complement one another to build a fuller picture of your health.`
+  },
+  {
+    id: 5, cat: "Nutrition", title: "5 Iron-Rich Foods to Support Healthy Blood",
+    dateISO: "2026-04-05", date: "Apr 5, 2026",
+    author: "Lab Content Team", reviewer: "Dr. [Name], [Qualification]",
+    excerpt: "Everyday foods that can help support healthy iron levels and blood health.",
+    image: { filename: "iron-rich-foods-blood-health.webp", alt: "Iron-rich foods that support healthy blood and hemoglobin levels", width: 800, height: 500 },
+    content: `Iron plays a key role in helping your body produce hemoglobin, the protein that carries oxygen in your red blood cells. A varied diet is one of the simplest ways to support healthy iron levels.
+
+1. Spinach and other dark leafy greens
+2. Red meat, poultry, and fish
+3. Lentils, chickpeas, and other legumes
+4. Pumpkin seeds and nuts
+5. Iron-fortified cereals and whole grains
+
+Pairing iron-rich foods with a source of vitamin C, like citrus fruit or peppers, can help your body absorb iron more effectively. If you're ever concerned about your iron levels specifically, your CBC and a conversation with your doctor are the best place to start.`
+  },
+  {
+    id: 6, cat: "Nutrition", title: "Hydration Tips Before Your Lab Visit",
+    dateISO: "2026-03-22", date: "Mar 22, 2026",
+    author: "Lab Content Team", reviewer: "Dr. [Name], [Qualification]",
+    excerpt: "Why drinking water beforehand can make your blood draw quicker and easier.",
+    image: { filename: "hydration-before-blood-draw.webp", alt: "Glass of water representing hydration tips before a blood draw", width: 800, height: 500 },
+    content: `Staying well hydrated before a blood draw can make the entire process faster and more comfortable — for you and for our technicians.
+
+Water helps keep your veins more visible and easier to access, which usually means a quicker, smoother sample collection. Aim to drink a few glasses of water in the hours before your appointment, unless you've been asked to fast.
+
+It's a good idea to go easy on coffee, tea, and other caffeinated drinks beforehand, since caffeine can have a mild dehydrating effect.
+
+A simple habit like this won't change your results, but it can make your visit noticeably easier.`
+  },
+];
+
+function useSEO({ title, description, image }) {
+  useEffect(() => {
+    document.title = title;
+    const ogImage = image || `${SITE_URL}/og-image.jpg`;
+    const setMeta = (attr, key, content) => {
+      let tag = document.head.querySelector(`meta[${attr}="${key}"]`);
+      if (!tag) {
+        tag = document.createElement("meta");
+        tag.setAttribute(attr, key);
+        document.head.appendChild(tag);
+      }
+      tag.setAttribute("content", content);
+    };
+    setMeta("name", "description", description);
+    setMeta("name", "robots", "index, follow");
+    setMeta("property", "og:title", title);
+    setMeta("property", "og:description", description);
+    setMeta("property", "og:type", "website");
+    setMeta("property", "og:image", ogImage);
+    setMeta("name", "twitter:card", "summary_large_image");
+    setMeta("name", "twitter:title", title);
+    setMeta("name", "twitter:description", description);
+    setMeta("name", "twitter:image", ogImage);
+    let canonical = document.head.querySelector('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = document.createElement("link");
+      canonical.setAttribute("rel", "canonical");
+      document.head.appendChild(canonical);
+    }
+    canonical.setAttribute("href", typeof window !== "undefined" ? window.location.href : SITE_URL);
+  }, [title, description, image]);
+}
+
+function useJsonLd(id, data) {
+  const json = JSON.stringify(data);
+  useEffect(() => {
+    let script = document.getElementById(id);
+    if (!script) {
+      script = document.createElement("script");
+      script.id = id;
+      script.type = "application/ld+json";
+      document.head.appendChild(script);
+    }
+    script.textContent = json;
+  }, [id, json]);
+}
+
+function getStatus(value, range) {
+  if (value === "" || value === null || value === undefined) return null;
+  const v = parseFloat(value);
+  if (isNaN(v)) return null;
+  if (v < range[0]) return "low";
+  if (v > range[1]) return "high";
+  return "normal";
+}
+
+function StatusBadge({ status }) {
+  if (!status) return <span className="text-xs text-slate-400">—</span>;
+  if (status === "normal") {
+    return (
+      <span className="inline-flex items-center gap-1 text-xs font-semibold text-green-700 bg-green-50 px-2.5 py-1 rounded-full whitespace-nowrap">
+        <CheckCircle className="w-3.5 h-3.5" /> Normal
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1 text-xs font-semibold text-red-700 bg-red-50 px-2.5 py-1 rounded-full whitespace-nowrap">
+      <AlertTriangle className="w-3.5 h-3.5" /> {status === "high" ? "High" : "Low"}
+    </span>
+  );
+}
+
+function RangeBar({ value, range }) {
+  const v = parseFloat(value);
+  const has = value !== "" && value !== undefined && !isNaN(v);
+  const lo = range[0], hi = range[1];
+  const span = hi - lo;
+  const padLo = lo - span * 0.6;
+  const padHi = hi + span * 0.6;
+  const pct = (n) => Math.max(0, Math.min(100, ((n - padLo) / (padHi - padLo)) * 100));
+  const normLo = pct(lo), normHi = pct(hi);
+  const status = has ? (v < lo ? "low" : v > hi ? "high" : "normal") : null;
+  return (
+    <div className="relative h-1.5 bg-slate-100 rounded-full w-full mt-3">
+      <div className="absolute h-1.5 bg-green-200 rounded-full" style={{ left: `${normLo}%`, width: `${normHi - normLo}%` }} />
+      {has && (
+        <div className={`absolute -top-1 w-3.5 h-3.5 rounded-full border-2 border-white shadow ${status === "normal" ? "bg-green-500" : "bg-red-500"}`} style={{ left: `calc(${pct(v)}% - 7px)` }} />
+      )}
+    </div>
+  );
+}
+
+function ParamRow({ param, value, onChange, range })
